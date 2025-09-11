@@ -10,7 +10,7 @@ function HomePage() {
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('userInfo'));
         if (user) {
-            history.push('/chats');
+            history.push('https://backend-chatroom-v9sh.onrender.com/chats');
         }
     }, [history]);
 

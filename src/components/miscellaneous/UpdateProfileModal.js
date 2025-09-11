@@ -40,7 +40,7 @@ const UpdateProfileModal = () => {
             };
 
             const { data } = await axios.put(
-                "/api/user/update",
+                "https://backend-chatroom-v9sh.onrender.com/api/user/update",
                 { name, email, pic, password },
                 config
             );

@@ -26,7 +26,7 @@ const CreatePublicChatModal = ({ isOpen, onClose, fetchAgain, setFetchAgain }) =
 
         try {
             const config = { headers: { Authorization: `Bearer ${user.token}` } };
-            const { data } = await axios.post('/api/chat/public', { name: chatName }, config);
+            const { data } = await axios.post('https://backend-chatroom-v9sh.onrender.com/api/chat/public', { name: chatName }, config);
             setChats(prev => [data, ...prev]);
             setChatName('');
             toast({

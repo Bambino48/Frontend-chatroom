@@ -39,7 +39,7 @@ import io from "socket.io-client";
 import "./styles.css";
 import EmojiPicker from "emoji-picker-react";
 
-const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = "https://backend-chatroom-v9sh.onrender.com";
 let socket;
 
 const SingleChat = ({ fetchAgain, setFetchAgain, messages, setMessages }) => {
@@ -106,7 +106,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, messages, setMessages }) => {
             const config = {
                 headers: { Authorization: `Bearer ${user.token}` },
             };
-            const { data } = await axios.get(`/api/message/${selectedChat._id}`, config);
+            const { data } = await axios.get(`https://backend-chatroom-v9sh.onrender.com/api/message/${selectedChat._id}`, config);
             setMessages(data);
             socket.emit("join chat", selectedChat._id);
             setLoading(false);
@@ -132,7 +132,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, messages, setMessages }) => {
                     },
                 };
                 const { data } = await axios.post(
-                    "/api/message",
+                    "https://backend-chatroom-v9sh.onrender.com/api/message",
                     { content: newMessage.trim(), chatId: selectedChat._id },
                     config
                 );
@@ -200,7 +200,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, messages, setMessages }) => {
                                 "Content-Type": "multipart/form-data",
                             },
                         };
-                        const { data } = await axios.post("/api/message/upload", formData, config);
+                        const { data } = await axios.post("https://backend-chatroom-v9sh.onrender.com/api/message/upload", formData, config);
                         setMessages((prev) => [...prev, data]);
                         socket.emit("new message", data);
                     } catch {
@@ -300,7 +300,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, messages, setMessages }) => {
                                         "Content-Type": "multipart/form-data",
                                     },
                                 };
-                                const { data } = await axios.post("/api/message/upload", formData, config);
+                                const { data } = await axios.post("https://backend-chatroom-v9sh.onrender.com/api/message/upload", formData, config);
                                 setMessages((prev) => [...prev, data]);
                                 socket.emit("new message", data);
                             } catch {

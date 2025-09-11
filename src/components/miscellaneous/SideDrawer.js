@@ -67,7 +67,7 @@ const SideDrawer = () => {
 
     const logoutHandler = () => {
         localStorage.removeItem("userInfo");
-        history.push("/");
+        history.push("https://backend-chatroom-v9sh.onrender.com/");
     };
 
     const handleExploreClick = async () => {
@@ -80,7 +80,7 @@ const SideDrawer = () => {
                     Authorization: `Bearer ${user.token}`,
                 },
             };
-            const { data } = await axios.get("/api/chat/public-rooms", config);
+            const { data } = await axios.get("https://backend-chatroom-v9sh.onrender.com/api/chat/public-rooms", config);
             const availablePublicGroups = data.filter(
                 (chat) =>
                     chat.isGroupChat &&
@@ -109,7 +109,7 @@ const SideDrawer = () => {
                 },
             };
             const { data } = await axios.put(
-                "/api/chat/groupadd",
+                "https://backend-chatroom-v9sh.onrender.com/api/chat/groupadd",
                 { chatId, userId: user._id },
                 config
             );
@@ -158,7 +158,7 @@ const SideDrawer = () => {
                             variant="ghost"
                             fontSize="20px"
                             onClick={() => {
-                                window.location.href = "/chats";
+                                window.location.href = "https://backend-chatroom-v9sh.onrender.com/chats";
                             }}
                         />
                     </Tooltip>

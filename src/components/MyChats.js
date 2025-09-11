@@ -104,7 +104,7 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
             const config = {
                 headers: { Authorization: `Bearer ${user.token}` },
             };
-            const { data } = await axios.get("/api/chat", config);
+            const { data } = await axios.get("https://backend-chatroom-v9sh.onrender.com/api/chat", config);
             setChats(data);
         } catch (error) {
             toast({
@@ -134,7 +134,7 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
             const config = {
                 headers: { Authorization: `Bearer ${user.token}` },
             };
-            const { data } = await axios.get(`/api/user?search=${search}`, config);
+            const { data } = await axios.get(`https://backend-chatroom-v9sh.onrender.com/api/user?search=${search}`, config);
             setSearchResult(data);
         } catch (error) {
             toast({
@@ -159,7 +159,7 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
                     Authorization: `Bearer ${user.token}`,
                 },
             };
-            const { data } = await axios.post("/api/chat", { userId }, config);
+            const { data } = await axios.post("https://backend-chatroom-v9sh.onrender.com/api/chat", { userId }, config);
             if (!chats.find((c) => c._id === data._id)) {
                 setChats([data, ...chats]);
             }

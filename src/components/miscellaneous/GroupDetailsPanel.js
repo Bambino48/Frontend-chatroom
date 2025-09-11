@@ -19,7 +19,7 @@ const isLink = (text) => /https?:\/\/[^\s]+/i.test(text);
 
 const formatUrl = (url) => {
     if (url.startsWith("http")) return url;
-    return `http://localhost:5000${url}`;
+    return `https://backend-chatroom-v9sh.onrender.com${url}`;
 };
 
 const GroupDetailsPanel = ({ chat, messages }) => {

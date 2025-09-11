@@ -93,7 +93,7 @@ const Signup = () => {
                     "Content-type": "application/json",
                 },
             };
-            const { data } = await axios.post("/api/user", { name, email, password, pic }, config);
+            const { data } = await axios.post("https://backend-chatroom-v9sh.onrender.com/api/user", { name, email, password, pic }, config);
             toast({
                 title: "Inscription réussie",
                 status: "success",
