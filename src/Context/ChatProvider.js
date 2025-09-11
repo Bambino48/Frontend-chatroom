@@ -19,7 +19,7 @@ const ChatProvider = ({ children }) => {
         setUser(userInfo);
 
         if (!userInfo) {
-            history.push("https://backend-chatroom-v9sh.onrender.com/");
+            history.push("/");
         }
     }, [history]);
 

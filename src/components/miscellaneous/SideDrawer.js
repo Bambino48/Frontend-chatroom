@@ -67,7 +67,7 @@ const SideDrawer = () => {
 
     const logoutHandler = () => {
         localStorage.removeItem("userInfo");
-        history.push("https://backend-chatroom-v9sh.onrender.com/");
+        history.push("/");
     };
 
     const handleExploreClick = async () => {
@@ -158,7 +158,7 @@ const SideDrawer = () => {
                             variant="ghost"
                             fontSize="20px"
                             onClick={() => {
-                                window.location.href = "https://backend-chatroom-v9sh.onrender.com/chats";
+                                window.location.href = "/chats";
                             }}
                         />
                     </Tooltip>
