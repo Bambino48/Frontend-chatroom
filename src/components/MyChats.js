@@ -24,7 +24,7 @@ import UserListItem from "./UserAvatar/UserListItem";
 import io from "socket.io-client";
 import axios from "axios";
 
-const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = "https://backend-chatroom-v9sh.onrender.com";
 const socket = io(ENDPOINT);
 
 const MyChats = ({ fetchAgain, setFetchAgain }) => {
