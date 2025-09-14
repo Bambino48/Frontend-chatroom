@@ -19,138 +19,109 @@ import {
     ArrowBackIcon,
     ArrowRightIcon,
     PhoneIcon,
+    InfoOutlineIcon,
 } from "@chakra-ui/icons";
-import {
-    FaVideo,
-    FaSmile,
-    FaPaperclip,
-    FaEllipsisV,
-    FaMicrophone,
-    FaMicrophoneSlash,
-} from "react-icons/fa";
+import { FaSmile, FaMicrophone, FaMicrophoneSlash, FaPaperclip } from "react-icons/fa";
+import Lottie from "react-lottie";
+import EmojiPicker from "emoji-picker-react";
+import io from "socket.io-client";
+import axios from "axios";
 import { ChatState } from "../Context/ChatProvider";
-import { getSenderFull } from "../config/ChatLogics";
+import ScrollableChat from "./ScrollableChat";
+import animationData from "../animations/typing.json";
 import ProfileModal from "./miscellaneous/ProfileModal";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
-import ScrollableChat from "./ScrollableChat";
-import Lottie from "react-lottie";
-import axios from "axios";
-import io from "socket.io-client";
-import "./styles.css";
-import EmojiPicker from "emoji-picker-react";
 
-const ENDPOINT = "https://backend-chatroom-v9sh.onrender.com";
-let socket;
+const ENDPOINT = "https://backend-chatroom-3.onrender.com"; // ⚠️ mets ton backend ici
+let socket, selectedChatCompare;
 
-const SingleChat = ({ fetchAgain, setFetchAgain, messages, setMessages }) => {
-    const [newMessage, setNewMessage] = useState("");
+function SingleChat({ fetchAgain, setFetchAgain, messages, setMessages }) {
+    const { user, selectedChat, setSelectedChat } = ChatState();
+
     const [loading, setLoading] = useState(false);
+    const [newMessage, setNewMessage] = useState("");
+    const [socketConnected, setSocketConnected] = useState(false);
     const [typing, setTyping] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
-    const [socketConnected, setSocketConnected] = useState(false);
     const [showEmoji, setShowEmoji] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
-    const [mediaRecorder, setMediaRecorder] = useState(null);
-
-    const { user, selectedChat, setSelectedChat, connectedUsers } = ChatState();
     const toast = useToast();
 
-    const selectedChatRef = useRef(selectedChat);
+    const messagesEndRef = useRef(null);
 
+    // Options pour Lottie (animation typing)
     const defaultOptions = {
         loop: true,
         autoplay: true,
-        animationData: require("../animations/typing.json"),
+        animationData,
         rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
     };
 
-    useEffect(() => {
-        socket = io(ENDPOINT);
-        socket.emit("setup", user);
-        socket.on("connected", () => setSocketConnected(true));
-        socket.on("typing", () => setIsTyping(true));
-        socket.on("stop typing", () => setIsTyping(false));
-
-        return () => {
-            socket.disconnect();
-        };
-    }, [user]);
-
-    useEffect(() => {
-        selectedChatRef.current = selectedChat;
-        fetchMessages();
-    }, [selectedChat]);
-
-    useEffect(() => {
-        if (!socket) return;
-
-        const messageHandler = (newMsg) => {
-            if (!selectedChatRef.current || selectedChatRef.current._id !== newMsg.chat._id) {
-                // Ici tu peux gérer les notifications pour messages hors chat courant
-            } else {
-                setMessages((prevMessages) => [...prevMessages, newMsg]);
-            }
-        };
-
-        socket.on("message received", messageHandler);
-
-        return () => {
-            socket.off("message received", messageHandler);
-        };
-    }, [setMessages]);
-
+    // Charger les messages
     const fetchMessages = async () => {
         if (!selectedChat) return;
         try {
             setLoading(true);
-            const config = {
-                headers: { Authorization: `Bearer ${user.token}` },
-            };
-            const { data } = await axios.get(`https://backend-chatroom-v9sh.onrender.com/api/message/${selectedChat._id}`, config);
+            const { data } = await axios.get(
+                `${ENDPOINT}/api/message/${selectedChat._id}`,
+                { headers: { Authorization: `Bearer ${user.token}` } }
+            );
             setMessages(data);
-            socket.emit("join chat", selectedChat._id);
             setLoading(false);
+            socket.emit("join chat", selectedChat._id);
         } catch (error) {
             toast({
                 title: "Erreur",
-                description: "Impossible de charger les messages",
+                description: "Impossible de charger les messages.",
                 status: "error",
-                duration: 5000,
+                duration: 3000,
                 isClosable: true,
             });
         }
     };
 
-    const sendMessage = async (eventOrClick) => {
-        if ((eventOrClick.key === "Enter" || eventOrClick.type === "click") && newMessage.trim() !== "") {
+    // Envoyer message
+    const sendMessage = async (event) => {
+        if ((event.type === "click" || event.key === "Enter") && newMessage) {
             socket.emit("stop typing", selectedChat._id);
             try {
-                const config = {
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${user.token}`,
-                    },
-                };
                 const { data } = await axios.post(
-                    "https://backend-chatroom-v9sh.onrender.com/api/message",
-                    { content: newMessage.trim(), chatId: selectedChat._id },
-                    config
+                    `${ENDPOINT}/api/message`,
+                    { content: newMessage, chatId: selectedChat._id },
+                    { headers: { Authorization: `Bearer ${user.token}` } }
                 );
                 setNewMessage("");
-                setMessages((prev) => [...prev, data]);
+                setMessages([...messages, data]);
                 socket.emit("new message", data);
             } catch (error) {
                 toast({
                     title: "Erreur",
-                    description: error.response?.data?.message || "Erreur inconnue",
+                    description: "Impossible d'envoyer le message.",
                     status: "error",
-                    duration: 5000,
+                    duration: 3000,
                     isClosable: true,
                 });
             }
         }
     };
 
+    // Upload fichier
+    const handleFileUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        toast({ title: "Upload fichier", description: file.name, status: "info" });
+    };
+
+    // Micro
+    const handleMicroClick = () => {
+        setIsRecording(!isRecording);
+        toast({
+            title: isRecording ? "Arrêt enregistrement" : "Démarrage micro",
+            status: isRecording ? "warning" : "success",
+        });
+    };
+
+    // Gestion saisie
     const typingHandler = (e) => {
         setNewMessage(e.target.value);
         if (!socketConnected) return;
@@ -158,188 +129,239 @@ const SingleChat = ({ fetchAgain, setFetchAgain, messages, setMessages }) => {
             setTyping(true);
             socket.emit("typing", selectedChat._id);
         }
-
         let lastTypingTime = new Date().getTime();
+        let timerLength = 3000;
         setTimeout(() => {
             let timeNow = new Date().getTime();
-            if (timeNow - lastTypingTime >= 3000 && typing) {
+            if (timeNow - lastTypingTime >= timerLength && typing) {
                 socket.emit("stop typing", selectedChat._id);
                 setTyping(false);
             }
-        }, 3000);
+        }, timerLength);
     };
 
-    // Gestion enregistrement audio inchangée, idem pour le rendu JSX...
+    // Scroll automatique
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
 
-    const handleMicroClick = async () => {
-        if (isRecording) {
-            mediaRecorder.stop();
-            setIsRecording(false);
-        } else {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const recorder = new MediaRecorder(stream);
-                let chunks = [];
+    // Socket.IO connexion
+    useEffect(() => {
+        socket = io(ENDPOINT);
+        socket.emit("setup", user);
+        socket.on("connected", () => setSocketConnected(true));
+        socket.on("typing", () => setIsTyping(true));
+        socket.on("stop typing", () => setIsTyping(false));
+    }, [user]);
 
-                recorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) chunks.push(event.data);
-                };
+    // Messages
+    useEffect(() => {
+        fetchMessages();
+        selectedChatCompare = selectedChat;
+    }, [selectedChat]);
 
-                recorder.onstop = async () => {
-                    const audioBlob = new Blob(chunks, { type: "audio/webm" });
-                    const file = new File([audioBlob], "audio-message.webm", { type: "audio/webm" });
-
-                    const formData = new FormData();
-                    formData.append("file", file);
-                    formData.append("chatId", selectedChat._id);
-
-                    try {
-                        const config = {
-                            headers: {
-                                Authorization: `Bearer ${user.token}`,
-                                "Content-Type": "multipart/form-data",
-                            },
-                        };
-                        const { data } = await axios.post("https://backend-chatroom-v9sh.onrender.com/api/message/upload", formData, config);
-                        setMessages((prev) => [...prev, data]);
-                        socket.emit("new message", data);
-                    } catch {
-                        toast({
-                            title: "Erreur d'envoi audio",
-                            description: "Le message vocal n'a pas pu être envoyé.",
-                            status: "error",
-                            duration: 5000,
-                            isClosable: true,
-                        });
-                    }
-                };
-
-                recorder.start();
-                setMediaRecorder(recorder);
-                setIsRecording(true);
-            } catch {
-                toast({
-                    title: "Micro non autorisé",
-                    description: "Impossible de démarrer l'enregistrement vocal.",
-                    status: "error",
-                    duration: 5000,
-                    isClosable: true,
-                });
+    // Réception messages
+    useEffect(() => {
+        socket.on("message received", (newMessageReceived) => {
+            if (
+                !selectedChatCompare ||
+                selectedChatCompare._id !== newMessageReceived.chat._id
+            ) {
+                // TODO: notif
+            } else {
+                setMessages((prev) => [...prev, newMessageReceived]);
             }
-        }
-    };
-
-    if (!selectedChat) {
-        return (
-            <Box display="flex" alignItems="center" justifyContent="center" h="100%">
-                <Text fontSize="2xl" fontFamily="Work sans">Sélectionnez un utilisateur pour commencer</Text>
-            </Box>
-        );
-    }
-
-    const recipient = !selectedChat.isGroupChat ? getSenderFull(user, selectedChat.users) : null;
-    const isOnline = recipient && connectedUsers?.some((u) => u._id === recipient._id);
+        });
+    });
 
     return (
-        <Box display="flex" flexDir="column" h="100%" w="100%" position="relative">
-            {/* Header */}
-            <Box px={4} py={3} display="flex" alignItems="center" justifyContent="space-between" borderBottom="1px solid #e0e0e0">
-                <Box display="flex" alignItems="center" gap={4}>
-                    <IconButton display={{ base: "flex", md: "none" }} icon={<ArrowBackIcon />} onClick={() => setSelectedChat("")} />
-                    <Avatar size="md" name={selectedChat.isGroupChat ? selectedChat.chatName : recipient?.name} src={recipient?.pic} />
-                    <Box>
-                        <Text fontWeight="bold">{!selectedChat.isGroupChat ? recipient?.name : selectedChat.chatName}</Text>
-                        {!selectedChat.isGroupChat && (
-                            <HStack spacing={2} align="center">
-                                <Box w="8px" h="8px" borderRadius="full" bg={isOnline ? "green.400" : "gray.400"} />
-                                <Text fontSize="xs" color="gray.500">{isOnline ? "En ligne" : "Hors ligne"}</Text>
-                            </HStack>
-                        )}
+        <>
+            {selectedChat ? (
+                <Box
+                    display="flex"
+                    flexDirection="column"
+                    justifyContent="space-between"
+                    width="100%"
+                    height="100%"
+                >
+                    {/* Header */}
+                    <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        p={2}
+                        borderBottom="1px solid #ccc"
+                        bg="gray.100"
+                    >
+                        <HStack spacing={2}>
+                            <Tooltip label="Retour" placement="bottom">
+                                <IconButton
+                                    icon={<ArrowBackIcon />}
+                                    onClick={() => setSelectedChat("")}
+                                    variant="ghost"
+                                    aria-label="Retour"
+                                    size={{ base: "sm", md: "md" }}
+                                />
+                            </Tooltip>
+                            {selectedChat.isGroupChat ? (
+                                <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold">
+                                    {selectedChat.chatName}
+                                </Text>
+                            ) : (
+                                <>
+                                    <Avatar
+                                        size="sm"
+                                        src={
+                                            selectedChat.users.find((u) => u._id !== user._id).pic
+                                        }
+                                    />
+                                    <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold">
+                                        {selectedChat.users.find((u) => u._id !== user._id).name}
+                                    </Text>
+                                </>
+                            )}
+                        </HStack>
+                        <HStack>
+                            <IconButton
+                                icon={<PhoneIcon />}
+                                variant="ghost"
+                                aria-label="Appel"
+                                size={{ base: "sm", md: "md" }}
+                            />
+                            {selectedChat.isGroupChat ? (
+                                <UpdateGroupChatModal
+                                    fetchAgain={fetchAgain}
+                                    setFetchAgain={setFetchAgain}
+                                />
+                            ) : (
+                                <ProfileModal
+                                    user={selectedChat.users.find((u) => u._id !== user._id)}
+                                />
+                            )}
+                        </HStack>
                     </Box>
-                </Box>
-                <Box display="flex" alignItems="center" gap={2}>
-                    <Tooltip label="Appel audio"><IconButton icon={<PhoneIcon />} size="sm" variant="ghost" /></Tooltip>
-                    <Tooltip label="Appel vidéo"><IconButton icon={<FaVideo />} size="sm" variant="ghost" /></Tooltip>
-                    <Menu>
-                        <MenuButton as={IconButton} icon={<FaEllipsisV />} variant="ghost" />
-                        <MenuList>
-                            {!selectedChat.isGroupChat
-                                ? <MenuItem><ProfileModal user={recipient} /></MenuItem>
-                                : <MenuItem><UpdateGroupChatModal fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} fetchMessages={fetchMessages} /></MenuItem>}
-                        </MenuList>
-                    </Menu>
-                </Box>
-            </Box>
 
-            {/* Messages */}
-            <Box flex="1" p={4} overflowY="auto" bg="#f8f8f8">
-                {loading ? <Spinner size="xl" alignSelf="center" /> : <ScrollableChat messages={messages} user={user} chat={selectedChat} />}
-                {isTyping && <Box mt={2}><Lottie options={defaultOptions} width={70} /></Box>}
-            </Box>
-
-            {/* Input */}
-            <FormControl isRequired mt={2} px={4} pb={4}>
-                <Box display="flex" alignItems="center" gap={2}>
-                    <Input
-                        type="file"
-                        accept="image/*,audio/*,video/*,application/pdf"
-                        display="none"
-                        id="file-upload"
-                        onChange={async (e) => {
-                            const file = e.target.files[0];
-                            if (!file) return;
-
-                            const formData = new FormData();
-                            formData.append("file", file);
-                            formData.append("chatId", selectedChat._id);
-
-                            try {
-                                const config = {
-                                    headers: {
-                                        Authorization: `Bearer ${user.token}`,
-                                        "Content-Type": "multipart/form-data",
-                                    },
-                                };
-                                const { data } = await axios.post("https://backend-chatroom-v9sh.onrender.com/api/message/upload", formData, config);
-                                setMessages((prev) => [...prev, data]);
-                                socket.emit("new message", data);
-                            } catch {
-                                toast({
-                                    title: "Erreur d'envoi",
-                                    description: "Le fichier n'a pas pu être envoyé.",
-                                    status: "error",
-                                    duration: 5000,
-                                    isClosable: true,
-                                });
-                            }
-                        }}
-                    />
-                    <label htmlFor="file-upload">
-                        <IconButton as="span" icon={<FaPaperclip />} colorScheme="gray" aria-label="Ajouter un fichier" variant="ghost" />
-                    </label>
-                    <IconButton icon={isRecording ? <FaMicrophoneSlash /> : <FaMicrophone />} colorScheme={isRecording ? "red" : "gray"} aria-label="Micro" variant="ghost" onClick={handleMicroClick} />
-                    <IconButton icon={<FaSmile />} onClick={() => setShowEmoji(!showEmoji)} colorScheme="gray" variant="ghost" />
-                    <Input
+                    {/* Messages */}
+                    <Box
                         flex="1"
-                        variant="filled"
-                        bg="#E0E0E0"
-                        placeholder="Écrivez un message..."
-                        onChange={typingHandler}
-                        value={newMessage}
-                        onKeyDown={sendMessage}
-                    />
-                    {newMessage && (
-                        <IconButton colorScheme="blue" aria-label="Envoyer" icon={<ArrowRightIcon />} onClick={(e) => sendMessage({ type: "click" })} />
-                    )}
-                </Box>
-                {showEmoji && (
-                    <Box position="absolute" bottom="70px" right="50px" zIndex="10">
-                        <EmojiPicker onEmojiClick={(emojiData) => setNewMessage((prev) => prev + emojiData.emoji)} />
+                        p={4}
+                        overflowY="auto"
+                        bg="#f8f8f8"
+                        display="flex"
+                        flexDirection="column"
+                        alignItems="center"
+                        justifyContent={loading ? "center" : "flex-start"}
+                    >
+                        {loading ? (
+                            <Spinner size="xl" thickness="4px" speed="0.65s" color="blue.500" />
+                        ) : (
+                            <ScrollableChat
+                                messages={messages}
+                                user={user}
+                                chat={selectedChat}
+                            />
+                        )}
+                        {isTyping && (
+                            <Box mt={2} alignSelf="flex-start">
+                                <Lottie options={defaultOptions} width={70} />
+                            </Box>
+                        )}
+                        <div ref={messagesEndRef} />
                     </Box>
-                )}
-            </FormControl>
-        </Box>
+
+                    {/* Input */}
+                    <FormControl isRequired mt={2} px={2} pb={{ base: 2, md: 4 }}>
+                        <Box display="flex" alignItems="center" gap={2} flexWrap="nowrap">
+                            {/* Fichier */}
+                            <Input
+                                type="file"
+                                accept="image/*,audio/*,video/*,application/pdf"
+                                display="none"
+                                id="file-upload"
+                                onChange={handleFileUpload}
+                            />
+                            <label htmlFor="file-upload">
+                                <IconButton
+                                    as="span"
+                                    icon={<FaPaperclip />}
+                                    colorScheme="gray"
+                                    aria-label="Ajouter un fichier"
+                                    variant="ghost"
+                                    size={{ base: "sm", md: "md" }}
+                                />
+                            </label>
+
+                            {/* Micro */}
+                            <IconButton
+                                icon={isRecording ? <FaMicrophoneSlash /> : <FaMicrophone />}
+                                colorScheme={isRecording ? "red" : "gray"}
+                                aria-label="Micro"
+                                variant="ghost"
+                                size={{ base: "sm", md: "md" }}
+                                onClick={handleMicroClick}
+                            />
+
+                            {/* Emoji */}
+                            <IconButton
+                                icon={<FaSmile />}
+                                onClick={() => setShowEmoji(!showEmoji)}
+                                colorScheme="gray"
+                                variant="ghost"
+                                size={{ base: "sm", md: "md" }}
+                            />
+
+                            {/* Texte */}
+                            <Input
+                                flex="1"
+                                variant="filled"
+                                bg="#E0E0E0"
+                                placeholder="Écrivez un message..."
+                                onChange={typingHandler}
+                                value={newMessage}
+                                onKeyDown={sendMessage}
+                                fontSize={{ base: "sm", md: "md" }}
+                            />
+
+                            {/* Envoyer */}
+                            {newMessage && (
+                                <IconButton
+                                    colorScheme="blue"
+                                    aria-label="Envoyer"
+                                    icon={<ArrowRightIcon />}
+                                    onClick={(e) => sendMessage({ type: "click" })}
+                                    size={{ base: "sm", md: "md" }}
+                                />
+                            )}
+                        </Box>
+
+                        {/* Emoji Picker */}
+                        {showEmoji && (
+                            <Box
+                                position="absolute"
+                                bottom={{ base: "60px", md: "70px" }}
+                                right={{ base: "10px", md: "50px" }}
+                                zIndex="10"
+                                maxW={{ base: "90vw", md: "300px" }}
+                            >
+                                <EmojiPicker
+                                    width="100%"
+                                    onEmojiClick={(emojiData) =>
+                                        setNewMessage((prev) => prev + emojiData.emoji)
+                                    }
+                                />
+                            </Box>
+                        )}
+                    </FormControl>
+                </Box>
+            ) : (
+                <Box display="flex" alignItems="center" justifyContent="center" h="100%">
+                    <Text fontSize={{ base: "lg", md: "3xl" }} pb={3}>
+                        Cliquez sur un chat pour commencer
+                    </Text>
+                </Box>
+            )}
+        </>
     );
-};
+}
 
 export default SingleChat;
