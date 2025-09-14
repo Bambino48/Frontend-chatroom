@@ -56,17 +56,25 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
     const [connectedUsers, setConnectedUsers] = useState([]);
     const toast = useToast();
     const selectedChatRef = useRef(selectedChat);
+
     useEffect(() => {
         selectedChatRef.current = selectedChat;
     }, [selectedChat]);
 
+    // 🔹 Charger loggedUser une seule fois au montage
     useEffect(() => {
         const info = localStorage.getItem("userInfo");
         if (info) {
             setLoggedUser(JSON.parse(info));
         }
-        if(user) fetchChats();
-    }, [fetchAgain, user]);
+    }, []);
+
+    // 🔹 Charger les chats uniquement quand user est dispo
+    useEffect(() => {
+        if (user) {
+            fetchChats();
+        }
+    }, [user, fetchAgain]);
 
     useEffect(() => {
         if (!user) return;
@@ -101,11 +109,14 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
 
     const fetchChats = async () => {
         try {
-            if(!user) return;
+            if (!user) return;
             const config = {
                 headers: { Authorization: `Bearer ${user.token}` },
             };
-            const { data } = await axios.get("https://backend-chatroom-v9sh.onrender.com/api/chat", config);
+            const { data } = await axios.get(
+                "https://backend-chatroom-v9sh.onrender.com/api/chat",
+                config
+            );
             setChats(data);
         } catch (error) {
             toast({
@@ -135,7 +146,10 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
             const config = {
                 headers: { Authorization: `Bearer ${user.token}` },
             };
-            const { data } = await axios.get(`https://backend-chatroom-v9sh.onrender.com/api/user?search=${search}`, config);
+            const { data } = await axios.get(
+                `https://backend-chatroom-v9sh.onrender.com/api/user?search=${search}`,
+                config
+            );
             setSearchResult(data);
         } catch (error) {
             toast({
@@ -152,7 +166,8 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
     };
 
     const accessChat = async (userId) => {
-        if(!user) return toast({ title: "Utilisateur non connecté", status: "error" });
+        if (!user)
+            return toast({ title: "Utilisateur non connecté", status: "error" });
         try {
             setLoadingChat(true);
             const config = {
@@ -161,7 +176,11 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
                     Authorization: `Bearer ${user.token}`,
                 },
             };
-            const { data } = await axios.post("https://backend-chatroom-v9sh.onrender.com/api/chat", { userId }, config);
+            const { data } = await axios.post(
+                "https://backend-chatroom-v9sh.onrender.com/api/chat",
+                { userId },
+                config
+            );
             if (!chats.find((c) => c._id === data._id)) {
                 setChats([data, ...chats]);
             }
@@ -183,12 +202,16 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
 
     const filteredChats = showFavoritesOnly
         ? chats.filter((chat) =>
-            chat.favorites?.some((favId) => favId.toString() === loggedUser?._id.toString())
-        )
+                chat.favorites?.some(
+                    (favId) => favId.toString() === loggedUser?._id.toString()
+                )
+            )
         : chats;
 
     const removeNotificationForChat = (chatId) => {
-        setNotification((prev) => prev.filter((notif) => notif.chat._id !== chatId));
+        setNotification((prev) =>
+            prev.filter((notif) => notif.chat._id !== chatId)
+        );
     };
 
     return (
@@ -206,13 +229,21 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
                 <Tooltip label="Rechercher un utilisateur" hasArrow placement="right">
                     <Button variant="outline" onClick={onOpen}>
                         <i className="fas fa-search" style={{ marginRight: "8px" }}></i>
-                        <Text display={{ base: "none", md: "inline" }}>Rechercher</Text>
+                        <Text display={{ base: "none", md: "inline" }}>
+                            Rechercher
+                        </Text>
                     </Button>
                 </Tooltip>
 
                 <Tooltip label="Créer une nouvelle salle" hasArrow placement="left">
-                    <Button colorScheme="teal" onClick={onGroupOpen} leftIcon={<AddIcon />}>
-                        <Text display={{ base: "none", md: "inline" }}>Créer une salle</Text>
+                    <Button
+                        colorScheme="teal"
+                        onClick={onGroupOpen}
+                        leftIcon={<AddIcon />}
+                    >
+                        <Text display={{ base: "none", md: "inline" }}>
+                            Créer une salle
+                        </Text>
                     </Button>
                 </Tooltip>
             </Box>
@@ -299,7 +330,11 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
                                     display="flex"
                                     alignItems="center"
                                     justifyContent="space-between"
-                                    bg={selectedChat?._id === chat._id ? "#e2f7f6" : "white"}
+                                    bg={
+                                        selectedChat?._id === chat._id
+                                            ? "#e2f7f6"
+                                            : "white"
+                                    }
                                     p={2}
                                     borderRadius="lg"
                                     boxShadow="sm"
@@ -309,16 +344,32 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
                                     <Box display="flex" alignItems="center">
                                         <Avatar
                                             size="md"
-                                            name={chat.isGroupChat ? chat.chatName : otherUser?.name}
-                                            src={chat.isGroupChat ? "/group.png" : otherUser?.pic}
+                                            name={
+                                                chat.isGroupChat
+                                                    ? chat.chatName
+                                                    : otherUser?.name
+                                            }
+                                            src={
+                                                chat.isGroupChat
+                                                    ? "/group.png"
+                                                    : otherUser?.pic
+                                            }
                                             mr={3}
                                         />
                                         <Box>
                                             <Text fontWeight="medium">
-                                                {chat.isGroupChat ? chat.chatName : otherUser?.name}
+                                                {chat.isGroupChat
+                                                    ? chat.chatName
+                                                    : otherUser?.name}
                                             </Text>
-                                            <Text fontSize="sm" color="gray.500" isTruncated maxW="200px">
-                                                {chat.latestMessage?.content || "Pas de message récent"}
+                                            <Text
+                                                fontSize="sm"
+                                                color="gray.500"
+                                                isTruncated
+                                                maxW="200px"
+                                            >
+                                                {chat.latestMessage?.content ||
+                                                    "Pas de message récent"}
                                             </Text>
                                         </Box>
                                     </Box>
