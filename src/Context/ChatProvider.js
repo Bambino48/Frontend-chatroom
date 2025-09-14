@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const ChatContext = createContext();
 
@@ -11,17 +11,16 @@ const ChatProvider = ({ children }) => {
     const [currentView, setCurrentView] = useState("chat");
     const [notification, setNotification] = useState([]);
 
-
-    const history = useHistory();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         setUser(userInfo);
 
         if (!userInfo) {
-            history.push("/");
+            navigate("/"); // ✅ redirection vers la page login
         }
-    }, [history]);
+    }, [navigate]);
 
     return (
         <ChatContext.Provider
