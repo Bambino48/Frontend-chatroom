@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Box, IconButton, useBreakpointValue } from "@chakra-ui/react";
-import { ArrowBackIcon } from "@chakra-ui/icons";
+import { Box, useBreakpointValue } from "@chakra-ui/react";
 import { ChatState } from "../Context/ChatProvider";
 import SideDrawer from "../components/miscellaneous/SideDrawer";
 import MyChats from "../components/MyChats";
@@ -9,7 +8,7 @@ import UserDetailsPanel from "../components/miscellaneous/UserDetailsPanel";
 import GroupDetailsPanel from "../components/miscellaneous/GroupDetailsPanel";
 
 function ChatPage() {
-    const { user, selectedChat, setSelectedChat } = ChatState();
+    const { user, selectedChat } = ChatState();
     const [fetchAgain, setFetchAgain] = useState(false);
     const [messages, setMessages] = useState([]);
     const isMobile = useBreakpointValue({ base: true, md: false });
@@ -57,20 +56,6 @@ function ChatPage() {
                         flexDirection="column"
                         position="relative"
                     >
-                        {/* Bouton retour visible uniquement sur mobile */}
-                        {isMobile && selectedChat && (
-                            <IconButton
-                                icon={<ArrowBackIcon />}
-                                position="absolute"
-                                top="2"
-                                left="2"
-                                size="sm"
-                                borderRadius="full"
-                                onClick={() => setSelectedChat(null)}
-                                aria-label="Revenir aux conversations"
-                            />
-                        )}
-
                         <ChatBox
                             fetchAgain={fetchAgain}
                             setFetchAgain={setFetchAgain}
