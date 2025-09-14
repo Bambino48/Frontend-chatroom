@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Box, useBreakpointValue } from "@chakra-ui/react";
+import { Box, IconButton, useBreakpointValue } from "@chakra-ui/react";
+import { ArrowBackIcon } from "@chakra-ui/icons";
 import { ChatState } from "../Context/ChatProvider";
 import SideDrawer from "../components/miscellaneous/SideDrawer";
 import MyChats from "../components/MyChats";
@@ -8,7 +9,7 @@ import UserDetailsPanel from "../components/miscellaneous/UserDetailsPanel";
 import GroupDetailsPanel from "../components/miscellaneous/GroupDetailsPanel";
 
 function ChatPage() {
-    const { user, selectedChat } = ChatState();
+    const { user, selectedChat, setSelectedChat } = ChatState();
     const [fetchAgain, setFetchAgain] = useState(false);
     const [messages, setMessages] = useState([]);
     const isMobile = useBreakpointValue({ base: true, md: false });
@@ -16,10 +17,10 @@ function ChatPage() {
     return (
         <Box width="100vw" height="100vh" overflow="hidden">
             <Box display="flex" flexDir="row" height="100%" width="100%">
-                {/* ✅ Barre latérale */}
-                {user && (
+                {/* ✅ Barre latérale (masquée sur mobile pour gagner de l’espace) */}
+                {user && !isMobile && (
                     <Box
-                        width={{ base: "60px", md: "90px" }}
+                        width={{ base: "0px", md: "90px" }}
                         height="100%"
                         bg="gray.50"
                         borderRight="1px solid #ccc"
@@ -54,7 +55,22 @@ function ChatPage() {
                         overflow="hidden"
                         display="flex"
                         flexDirection="column"
+                        position="relative"
                     >
+                        {/* Bouton retour visible uniquement sur mobile */}
+                        {isMobile && selectedChat && (
+                            <IconButton
+                                icon={<ArrowBackIcon />}
+                                position="absolute"
+                                top="2"
+                                left="2"
+                                size="sm"
+                                borderRadius="full"
+                                onClick={() => setSelectedChat(null)}
+                                aria-label="Revenir aux conversations"
+                            />
+                        )}
+
                         <ChatBox
                             fetchAgain={fetchAgain}
                             setFetchAgain={setFetchAgain}
@@ -64,7 +80,7 @@ function ChatPage() {
                     </Box>
                 )}
 
-                {/* ✅ Détails utilisateur ou groupe */}
+                {/* ✅ Détails utilisateur ou groupe (uniquement en md+) */}
                 {user && !isMobile && selectedChat && (
                     <Box
                         width="300px"
