@@ -65,8 +65,8 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
         if (info) {
             setLoggedUser(JSON.parse(info));
         }
-        fetchChats();
-    }, [fetchAgain]);
+        if(user) fetchChats();
+    }, [fetchAgain, user]);
 
     useEffect(() => {
         if (!user) return;
@@ -101,6 +101,7 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
 
     const fetchChats = async () => {
         try {
+            if(!user) return;
             const config = {
                 headers: { Authorization: `Bearer ${user.token}` },
             };
@@ -151,6 +152,7 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
     };
 
     const accessChat = async (userId) => {
+        if(!user) return toast({ title: "Utilisateur non connecté", status: "error" });
         try {
             setLoadingChat(true);
             const config = {
@@ -185,7 +187,6 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
         )
         : chats;
 
-    // 🔔 Fonction pour retirer les notifications d’un chat
     const removeNotificationForChat = (chatId) => {
         setNotification((prev) => prev.filter((notif) => notif.chat._id !== chatId));
     };
@@ -265,6 +266,8 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
                                 name={user.name}
                                 src={user.pic}
                                 border="2px solid green"
+                                cursor="pointer"
+                                onClick={() => accessChat(user._id)}
                             />
                         </Tooltip>
                     ))}
@@ -296,7 +299,7 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
                                     display="flex"
                                     alignItems="center"
                                     justifyContent="space-between"
-                                    bg={selectedChat === chat ? "#e2f7f6" : "white"}
+                                    bg={selectedChat?._id === chat._id ? "#e2f7f6" : "white"}
                                     p={2}
                                     borderRadius="lg"
                                     boxShadow="sm"
@@ -347,4 +350,3 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
 };
 
 export default MyChats;
-
