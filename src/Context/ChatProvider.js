@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 const ChatContext = createContext();
 
@@ -7,20 +7,20 @@ const ChatProvider = ({ children }) => {
     const [user, setUser] = useState();
     const [selectedChat, setSelectedChat] = useState();
     const [chats, setChats] = useState([]);
-    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false); // ✅ ajouté
+    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
     const [currentView, setCurrentView] = useState("chat");
     const [notification, setNotification] = useState([]);
 
-    const navigate = useNavigate();
+    const history = useHistory();
 
     useEffect(() => {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         setUser(userInfo);
 
         if (!userInfo) {
-            navigate("/"); // ✅ redirection vers la page login
+            history.push("/"); // redirection vers login
         }
-    }, [navigate]);
+    }, [history]);
 
     return (
         <ChatContext.Provider
@@ -32,7 +32,7 @@ const ChatProvider = ({ children }) => {
                 chats,
                 setChats,
                 showFavoritesOnly,
-                setShowFavoritesOnly, // ✅ ajouté ici
+                setShowFavoritesOnly,
                 currentView,
                 setCurrentView,
                 notification,
