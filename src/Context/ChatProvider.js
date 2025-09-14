@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { createContext, useContext, useEffect, useState } from "react";
+import { useHistory, useLocation } from "react-router-dom";
 
 const ChatContext = createContext();
 
@@ -12,15 +12,19 @@ const ChatProvider = ({ children }) => {
     const [notification, setNotification] = useState([]);
 
     const history = useHistory();
+    const location = useLocation();
 
     useEffect(() => {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        setUser(userInfo);
-
-        if (!userInfo) {
-            history.push("/"); // redirection vers login
+        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        if (userInfo) {
+            setUser(userInfo);
+        } else {
+            // ✅ éviter de boucler si on est déjà sur la page login
+            if (location.pathname !== "/") {
+                history.push("/");
+            }
         }
-    }, [history]);
+    }, [history, location.pathname]);
 
     return (
         <ChatContext.Provider
@@ -36,7 +40,7 @@ const ChatProvider = ({ children }) => {
                 currentView,
                 setCurrentView,
                 notification,
-                setNotification
+                setNotification,
             }}
         >
             {children}
