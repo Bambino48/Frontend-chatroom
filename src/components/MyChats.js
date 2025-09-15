@@ -15,6 +15,7 @@ import {
     useDisclosure,
     Tooltip,
     Avatar,
+    useBreakpointValue,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { ChatState } from "../Context/ChatProvider";
@@ -56,12 +57,12 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
     const [connectedUsers, setConnectedUsers] = useState([]);
     const toast = useToast();
     const selectedChatRef = useRef(selectedChat);
+    const isMobile = useBreakpointValue({ base: true, md: false });
 
     useEffect(() => {
         selectedChatRef.current = selectedChat;
     }, [selectedChat]);
 
-    // 🔹 Charger loggedUser une seule fois au montage
     useEffect(() => {
         const info = localStorage.getItem("userInfo");
         if (info) {
@@ -69,7 +70,6 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
         }
     }, []);
 
-    // 🔹 Charger les chats uniquement quand user est dispo
     useEffect(() => {
         if (user) {
             fetchChats();
@@ -225,28 +225,27 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
             borderWidth="1px"
             p={4}
         >
-            <Box display="flex" justifyContent="space-between" mb={4}>
-                <Tooltip label="Rechercher un utilisateur" hasArrow placement="right">
-                    <Button variant="outline" onClick={onOpen}>
-                        <i className="fas fa-search" style={{ marginRight: "8px" }}></i>
-                        <Text display={{ base: "none", md: "inline" }}>
-                            Rechercher
-                        </Text>
-                    </Button>
-                </Tooltip>
+            {/* 🔹 Boutons masqués en mobile */}
+            {!isMobile && (
+                <Box display="flex" justifyContent="space-between" mb={4}>
+                    <Tooltip label="Rechercher un utilisateur" hasArrow placement="right">
+                        <Button variant="outline" onClick={onOpen}>
+                            <i className="fas fa-search" style={{ marginRight: "8px" }}></i>
+                            <Text display={{ base: "none", md: "inline" }}>Rechercher</Text>
+                        </Button>
+                    </Tooltip>
 
-                <Tooltip label="Créer une nouvelle salle" hasArrow placement="left">
-                    <Button
-                        colorScheme="teal"
-                        onClick={onGroupOpen}
-                        leftIcon={<AddIcon />}
-                    >
-                        <Text display={{ base: "none", md: "inline" }}>
-                            Créer une salle
-                        </Text>
-                    </Button>
-                </Tooltip>
-            </Box>
+                    <Tooltip label="Créer une nouvelle salle" hasArrow placement="left">
+                        <Button
+                            colorScheme="teal"
+                            onClick={onGroupOpen}
+                            leftIcon={<AddIcon />}
+                        >
+                            <Text display={{ base: "none", md: "inline" }}>Créer une salle</Text>
+                        </Button>
+                    </Tooltip>
+                </Box>
+            )}
 
             <GroupChatModal
                 isOpen={isGroupOpen}
