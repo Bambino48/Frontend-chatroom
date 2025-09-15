@@ -9,8 +9,9 @@ import {
     DrawerCloseButton,
     useDisclosure,
     HStack,
+    Input,
 } from "@chakra-ui/react";
-import { HamburgerIcon } from "@chakra-ui/icons";
+import { HamburgerIcon, SearchIcon } from "@chakra-ui/icons";
 import { ChatState } from "../Context/ChatProvider";
 import SideDrawer from "../components/miscellaneous/SideDrawer";
 import MyChats from "../components/MyChats";
@@ -42,19 +43,33 @@ function ChatPage() {
                     </Box>
                 )}
 
-                {/* ✅ Bouton menu mobile, placé dans HStack pour éviter chevauchement */}
+                {/* ✅ Hamburger + recherche mobile */}
                 {user && isMobile && (
-                    <HStack position="absolute" top="2" left="2" zIndex="10" spacing={2}>
+                    <HStack
+                        position="absolute"
+                        top="2"
+                        left="2"
+                        right="2"
+                        zIndex="10"
+                        justifyContent="space-between"
+                        px={2}
+                    >
                         <IconButton
                             icon={<HamburgerIcon />}
                             size="md"
                             onClick={onOpen}
                             aria-label="Menu"
                         />
-                        {/* Ici tu peux ajouter l’icône de recherche sans chevauchement */}
+                        <Input
+                            placeholder="Rechercher..."
+                            size="sm"
+                            bg="white"
+                            borderRadius="md"
+                            maxW="70%"
+                        />
                     </HStack>
-
                 )}
+
                 <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
                     <DrawerOverlay />
                     <DrawerContent>
@@ -98,7 +113,7 @@ function ChatPage() {
                     </Box>
                 )}
 
-                {/* ✅ Détails utilisateur ou groupe (uniquement desktop) */}
+                {/* ✅ Détails utilisateur ou groupe (desktop uniquement) */}
                 {user && !isMobile && selectedChat && (
                     <Box
                         width="300px"

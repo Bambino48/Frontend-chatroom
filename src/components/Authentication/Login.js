@@ -73,33 +73,45 @@ const Login = () => {
         }
     };
 
-    return <VStack spacing="5px" color="black">
-        <FormControl id="email" isRequired>
-            <FormLabel>Adresse email</FormLabel>
-            <Input placeholder="Entrez votre email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </FormControl>
-        <FormControl id="password" isRequired>
-            <FormLabel>Mot de passe</FormLabel>
-            <InputGroup>
-                <Input type={show ? "text" : "password"} placeholder="Entrez votre mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} />
-                <InputRightElement>
-                    <Button h="1.75rem" size="sm" mr="4px" onClick={handleClick}>
-                        {show ? "Cacher" : "Afficher"}
-                    </Button>
-                </InputRightElement>
-            </InputGroup>
-        </FormControl>
+    return (
+        <VStack spacing="5px" color="black">
+            <FormControl id="email" isRequired>
+                <FormLabel>Adresse email</FormLabel>
+                <Input
+                    placeholder="Entrez votre email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+            </FormControl>
 
-        <Button colorScheme="blue" width="100%" style={{ marginTop: 15 }} onClick={submitHandler} isLoading={loading}>
-            Connexion
-        </Button>
-        <Button variant="solid" colorScheme="red" width="100%" onClick={() => {
-            setEmail("ibamba366@gmail.com");
-            setPassword("12345678");
-        }}>
-            Obtenir les identifiants invité
-        </Button>
-    </VStack>;
+            <FormControl id="password" isRequired>
+                <FormLabel>Mot de passe</FormLabel>
+                <InputGroup>
+                    <Input
+                        type={show ? "text" : "password"}
+                        placeholder="Entrez votre mot de passe"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <InputRightElement>
+                        <Button h="1.75rem" size="sm" mr="4px" onClick={handleClick}>
+                            {show ? "Cacher" : "Afficher"}
+                        </Button>
+                    </InputRightElement>
+                </InputGroup>
+            </FormControl>
+
+            <Button
+                colorScheme="blue"
+                width="100%"
+                style={{ marginTop: 15 }}
+                onClick={submitHandler}
+                isLoading={loading}
+            >
+                Connexion
+            </Button>
+        </VStack>
+    );
 }
 
 export default Login;
