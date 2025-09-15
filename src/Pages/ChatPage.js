@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Box, useBreakpointValue, IconButton, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton, useDisclosure } from "@chakra-ui/react";
+import {
+    Box,
+    IconButton,
+    useBreakpointValue,
+    Drawer,
+    DrawerOverlay,
+    DrawerContent,
+    DrawerCloseButton,
+    useDisclosure,
+    HStack,
+} from "@chakra-ui/react";
 import { HamburgerIcon } from "@chakra-ui/icons";
 import { ChatState } from "../Context/ChatProvider";
 import SideDrawer from "../components/miscellaneous/SideDrawer";
@@ -32,29 +42,26 @@ function ChatPage() {
                     </Box>
                 )}
 
-                {/* ✅ Bouton menu mobile */}
+                {/* ✅ Bouton menu mobile, placé dans HStack pour éviter chevauchement */}
                 {user && isMobile && (
-                    <Box
-                        position="absolute"
-                        top="2"
-                        left="2"
-                        zIndex="10"
-                    >
+                    <HStack position="absolute" top="2" left="2" zIndex="10" spacing={2}>
                         <IconButton
                             icon={<HamburgerIcon />}
                             size="md"
                             onClick={onOpen}
                             aria-label="Menu"
                         />
-                        <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
-                            <DrawerOverlay />
-                            <DrawerContent>
-                                <DrawerCloseButton />
-                                <SideDrawer />
-                            </DrawerContent>
-                        </Drawer>
-                    </Box>
+                        {/* Ici tu peux ajouter l’icône de recherche sans chevauchement */}
+                    </HStack>
+
                 )}
+                <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
+                    <DrawerOverlay />
+                    <DrawerContent>
+                        <DrawerCloseButton />
+                        <SideDrawer />
+                    </DrawerContent>
+                </Drawer>
 
                 {/* ✅ Liste des conversations */}
                 {user && (!isMobile || !selectedChat) && (
